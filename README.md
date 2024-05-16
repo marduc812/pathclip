@@ -3,7 +3,7 @@ Copy the absolute path of a file to your clipboard
 
 ## Overview
 
-`pathclip` is a simple command-line tool designed to copy the absolute path of a given file or directory, directly to your clipboard. It aims to simplify the process of sharing or using file paths by making it a one-step operation.
+`ptc` is a simple command-line tool designed to copy the absolute path of a given file or directory, directly to your clipboard. It aims to simplify the process of sharing or using file paths by making it a one-step operation.
 
 ## Features
 
@@ -37,7 +37,13 @@ Download the pre-compiled binaries for your operating system from the [Releases]
 To copy the absolute path of a file to the clipboard, simply run:
 
 ```bash
-pathclip /path/to/file
+ptc /path/to/file
+```
+
+Copy the content of a file:
+
+```bash
+ptc -c /path/to/file
 ```
 
 ## Contributing
