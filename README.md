@@ -49,4 +49,9 @@ ptc -c /path/to/file
 ## Contributing
 Feel free to open issues or submit pull requests. All contributions are welcome!
 
+## ChangeLog
 
+[0.3] - 10/12/2024
+
+- Added some color
+- Added better errors for linux 

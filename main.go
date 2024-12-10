@@ -4,12 +4,38 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/atotto/clipboard"
 )
 
+const (
+	colorReset  = "\033[0m"  // Reset to default color
+	colorGreen  = "\033[32m" // Green for success
+	colorYellow = "\033[33m" // Yellow for warnings
+	colorRed    = "\033[31m" // Red for errors
+)
+
+// Log functions with colors
+func logSuccess(message string) {
+	fmt.Printf("%s[+]%s %s\n", colorGreen, colorReset, message)
+}
+
+func logWarning(message string) {
+	fmt.Printf("%s[!]%s %s\n", colorYellow, colorReset, message)
+}
+
+func logError(prefix string, err error) {
+	fmt.Printf("%s[X]%s %s: %s\n", colorRed, colorReset, prefix, err)
+}
+
+// Main function
 func main() {
+	// Check for missing dependencies on Linux
+	checkEnvironment()
+
 	var copyContent bool
 	flag.BoolVar(&copyContent, "c", false, "Copy the content of the file to clipboard")
 
@@ -26,9 +52,9 @@ func main() {
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			fmt.Println("The path does not exist.")
+			logError("The path does not exist", err)
 		} else {
-			fmt.Println("Error:", err.Error())
+			logError("Error", err)
 		}
 		return
 	}
@@ -37,7 +63,7 @@ func main() {
 	if !filepath.IsAbs(path) {
 		absolutePath, err := filepath.Abs(path)
 		if err != nil {
-			fmt.Println("Error converting to absolute path:", err)
+			logError("Error converting to absolute path", err)
 			return
 		}
 		path = absolutePath
@@ -56,43 +82,66 @@ func main() {
 	}
 }
 
+func checkEnvironment() {
+	switch runtime.GOOS {
+	case "linux":
+		checkLinuxEnvironment()
+	default:
+		logError("Unsupported operating system", fmt.Errorf(runtime.GOOS))
+	}
+}
+
+func checkLinuxEnvironment() {
+	// Check if xclip is installed
+	if _, err := exec.LookPath("xclip"); err != nil {
+		logWarning("xclip is not installed. Install it using your package manager.")
+	}
+
+	// Check if DISPLAY is set
+	display := os.Getenv("DISPLAY")
+	if display == "" {
+		logWarning("DISPLAY is not set. Clipboard operations might fail.")
+		fmt.Println("In case it fails, set DISPLAY to 0. Run: \033[0mexport DISPLAY=:0\033[0m")
+	}
+}
+
 func copyPath2Clip(path string) {
 	copy2Clip(path)
-	fmt.Println("copied path of:", path)
+	logSuccess(fmt.Sprintf("Copied path of: %s", path))
 }
 
 func copyContent2Clip(path string) {
 	// Check if the path is a directory
 	info, err := os.Stat(path)
 	if err != nil {
-		fmt.Println("Failed to read file info:", err)
+		logError("Failed to read file info", err)
 		return
 	}
 	if info.IsDir() {
-		fmt.Println("Cannot copy content of a directory.")
+		logWarning("Cannot copy content of a directory.")
 		return
 	}
 
 	content, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Println("Failed to read file content: ", err)
+		logError("Failed to read file content", err)
 		return
 	}
 	copy2Clip(string(content))
-	fmt.Println("copied content of:", path)
+	logSuccess(fmt.Sprintf("Copied content of: %s", path))
 }
 
 func copy2Clip(data string) {
 	err := clipboard.WriteAll(data)
 	if err != nil {
-		fmt.Println("Failed to write to clipboard.", err)
+		logError("Failed to write to clipboard", err)
 		return
 	}
 }
 
 func displayUsage() {
 	fmt.Println("")
-	fmt.Println("pathclip v0.2")
+	fmt.Println("pathclip v0.3")
 	fmt.Println("")
 	fmt.Println("Copy the absolute location of a file to clipboard")
 	fmt.Println("Usage: ptc {file}")
