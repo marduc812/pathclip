@@ -86,6 +86,10 @@ func checkEnvironment() {
 	switch runtime.GOOS {
 	case "linux":
 		checkLinuxEnvironment()
+	case "darwin":
+		// mac os has by default pbcopy installed
+	case "windows":
+		// windows use their own system calls.
 	default:
 		logError("Unsupported operating system", fmt.Errorf(runtime.GOOS))
 	}
